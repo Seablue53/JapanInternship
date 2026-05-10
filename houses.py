@@ -1,172 +1,14 @@
-import config
-
-from random import randint
-from random import choice
+from random import randint, choice
 
 from gdpc import Block
-from gdpc.geometry import placeCuboid
-from gdpc.geometry import placeCuboidHollow
+from gdpc.geometry import placeCuboid, placeCuboidHollow
 
 from builder import get_height
 
-import math
-
-
-def create_house(x, z, biome, resource):
-
-    return {
-        "x": x,
-        "z": z,
-        "biome": biome,
-        "resource": resource,
-        "owner": None
-    }
-
-
-def generate_houses(village, amount):
-
-    houses = []
-
-    center_x = village["x"]
-    center_z = village["z"]
-
-    min_radius = 15
-    max_radius = 45
-
-    attempts = 0
-
-    while len(houses) < amount and attempts < 500:
-
-        attempts += 1
-
-        angle = randint(0, 360)
-
-        radius = randint(
-            min_radius,
-            max_radius
-        )
-
-        hx = int(
-            center_x +
-            math.cos(math.radians(angle)) * radius
-        )
-
-        hz = int(
-            center_z +
-            math.sin(math.radians(angle)) * radius
-        )
-
-        hx = max(
-            config.MAP_MARGIN,
-            min(
-                hx,
-                config.WORLD_SIZE - config.MAP_MARGIN
-            )
-        )
-
-        hz = max(
-            config.MAP_MARGIN,
-            min(
-                hz,
-                config.WORLD_SIZE - config.MAP_MARGIN
-            )
-        )
-
-        # évite les maisons trop proches
-        too_close = False
-
-        for house in houses:
-
-            distance = (
-                (hx - house["x"]) ** 2 +
-                (hz - house["z"]) ** 2
-            ) ** 0.5
-
-            if distance < 14:
-
-                too_close = True
-                break
-
-        if too_close:
-            continue
-
-        house = create_house(
-            hx,
-            hz,
-            village["biome"],
-            village["resource"]
-        )
-
-        houses.append(house)
-
-    return houses
-
-
-def get_wall_material(resource):
-
-    if resource == "wood":
-
-        return choice([
-            Block("spruce_planks"),
-            Block("oak_planks"),
-            Block("birch_planks")
-        ])
-
-    elif resource == "stone":
-
-        return choice([
-            Block("stone_bricks"),
-            Block("cobblestone"),
-            Block("andesite")
-        ])
-
-    elif resource == "sand":
-
-        return choice([
-            Block("sandstone"),
-            Block("smooth_sandstone")
-        ])
-
-    elif resource == "food":
-
-        return choice([
-            Block("oak_planks"),
-            Block("mud_bricks")
-        ])
-
-    return Block("oak_planks")
-
-def get_roof_material(resource):
-
-    if resource == "wood":
-
-        return choice([
-            "spruce_stairs",
-            "roof_material",
-            "dark_roof_material"
-        ])
-
-    elif resource == "stone":
-
-        return choice([
-            "stone_brick_stairs",
-            "cobblestone_stairs"
-        ])
-
-    elif resource == "sand":
-
-        return choice([
-            "sandstone_stairs"
-        ])
-
-    elif resource == "food":
-
-        return choice([
-            "roof_material",
-            "spruce_stairs"
-        ])
-
-    return "roof_material"
+from houses_data import create_house, generate_houses
+from materials import get_materials, pick
+from roof import build_roof
+from door import place_door
 
 
 def build_house(editor, world_slice, house):
@@ -176,151 +18,99 @@ def build_house(editor, world_slice, house):
 
     y = get_height(world_slice, x, z) - 1
 
-    wall_block = get_wall_material(
-        house["resource"]
+    mat = get_materials(house["resource"])
+
+    wall_name  = pick(mat["wall"])
+    log_name   = pick(mat["log"])
+    slab_name  = pick(mat["slab"])
+    stair_name = pick(mat["stairs"])
+    glass_name = mat["glass"]
+    floor_name = mat["floor"]
+    door_name  = mat["door"]
+    light_name = mat["light"]
+
+    wall_block  = Block(wall_name)
+    log_block   = Block(log_name)
+    glass_block = Block(glass_name)
+    floor_block = Block(floor_name)
+    air_block   = Block("air")
+
+    width  = randint(5, 8)
+    depth  = randint(5, 8)
+    height = randint(4, 5)
+
+    orientation = choice(["north", "south", "east", "west"])
+
+    # ── Fondation ─────────────────────────────────────────────────────────────
+    placeCuboid(
+        editor,
+        (x,         y,     z),
+        (x + width, y,     z + depth),
+        floor_block
     )
 
-    # tailles aléatoires
-    width = randint(4, 6)
-    depth = randint(4, 6)
-    height = randint(3, 4)
-
-    orientation = choice([
-        "north",
-        "south",
-        "east",
-        "west"
-    ])
-
-    # structure principale
+    # ── Murs creux ────────────────────────────────────────────────────────────
     placeCuboidHollow(
         editor,
-        (x, y, z),
+        (x,         y + 1,      z),
         (x + width, y + height, z + depth),
         wall_block
     )
 
-    # intérieur
+    # ── Vider l'intérieur ─────────────────────────────────────────────────────
     placeCuboid(
         editor,
-        (x + 1, y + 1, z + 1),
+        (x + 1,         y + 1,          z + 1),
         (x + width - 1, y + height - 1, z + depth - 1),
-        Block("air")
+        air_block
     )
 
-    roof_material = get_roof_material(
-    house["resource"]
-)
+    # ── Poutres d'angle (logs verticaux) ──────────────────────────────────────
+    for cx, cz in [
+        (x,          z),
+        (x + width,  z),
+        (x,          z + depth),
+        (x + width,  z + depth),
+    ]:
+        for dy in range(1, height + 1):
+            editor.placeBlock((cx, y + dy, cz), log_block)
 
-    # toit orientation nord/sud
-    if orientation in ["north", "south"]:
+    # ── Fenêtres ──────────────────────────────────────────────────────────────
+    win_y = y + 2
+    mid_x = x + width // 2
+    mid_z = z + depth // 2
 
-        for dz in range(depth + 1):
+    for win_x in [mid_x - 1, mid_x + 1]:
+        if x < win_x < x + width:
+            editor.placeBlock((win_x, win_y, z),         glass_block)
+            editor.placeBlock((win_x, win_y, z + depth), glass_block)
 
-            editor.placeBlock(
-                (x - 1, y + height + 1, z + dz),
-                Block(
-                    "roof_material",
-                    {
-                        "facing": "east"
-                    }
-                )
-            )
+    for win_z in [mid_z - 1, mid_z + 1]:
+        if z < win_z < z + depth:
+            editor.placeBlock((x,         win_y, win_z), glass_block)
+            editor.placeBlock((x + width, win_y, win_z), glass_block)
 
-            editor.placeBlock(
-                (x + width + 1, y + height + 1, z + dz),
-                Block(
-                    roof_material,
-                    {
-                        "facing": "west"
-                    }
-                )
-            )
+    # ── Toit ──────────────────────────────────────────────────────────────────
+    build_roof(
+        editor,
+        x, y + height, z,
+        width, depth,
+        orientation,
+        stair_name, slab_name,
+        log_name
+    )
 
-        placeCuboid(
-            editor,
-            (x, y + height + 1, z),
-            (x + width, y + height + 1, z + depth),
-            Block("oak_planks")
-        )
+    # ── Porte ─────────────────────────────────────────────────────────────────
+    place_door(
+        editor,
+        x, y, z,
+        width, depth,
+        orientation,
+        door_name
+    )
 
-    # toit orientation est/ouest
-    else:
-
-        for dx in range(width + 1):
-
-            editor.placeBlock(
-                (x + dx, y + height + 1, z - 1),
-                Block(
-                    "roof_material",
-                    {
-                        "facing": "south"
-                    }
-                )
-            )
-
-            editor.placeBlock(
-                (x + dx, y + height + 1, z + depth + 1),
-                Block(
-                    "roof_material",
-                    {
-                        "facing": "north"
-                    }
-                )
-            )
-
-        placeCuboid(
-            editor,
-            (x, y + height + 1, z),
-            (x + width, y + height + 1, z + depth),
-            Block("oak_planks")
-        )
-
-    # porte selon orientation
-    if orientation == "north":
-
-        editor.placeBlock(
-            (x + width // 2, y + 1, z),
-            Block(
-                "oak_door",
-                {
-                    "facing": "north"
-                }
-            )
-        )
-
-    elif orientation == "south":
-
-        editor.placeBlock(
-            (x + width // 2, y + 1, z + depth),
-            Block(
-                "oak_door",
-                {
-                    "facing": "south"
-                }
-            )
-        )
-
-    elif orientation == "east":
-
-        editor.placeBlock(
-            (x + width, y + 1, z + depth // 2),
-            Block(
-                "oak_door",
-                {
-                    "facing": "east"
-                }
-            )
-        )
-
-    else:
-
-        editor.placeBlock(
-            (x, y + 1, z + depth // 2),
-            Block(
-                "oak_door",
-                {
-                    "facing": "west"
-                }
-            )
-        )
+    # ── Lumière intérieure ────────────────────────────────────────────────────
+    editor.placeBlock(
+        (x + width // 2, y + height - 1, z + depth // 2),
+        Block(light_name)
+    )
