@@ -25,32 +25,54 @@ def generate_houses(village, amount):
 
     houses = []
 
-    for _ in range(amount):
+    spacing = 18
 
-        hx = max(
-            config.MAP_MARGIN,
-            min(
-                village["x"] + randint(-15, 15),
-                config.WORLD_SIZE - config.MAP_MARGIN
+    grid_size = int(amount ** 0.5) + 1
+
+    start_x = village["x"]
+    start_z = village["z"]
+
+    count = 0
+
+    for gx in range(grid_size):
+
+        for gz in range(grid_size):
+
+            if count >= amount:
+                return houses
+
+            offset_x = randint(-3, 3)
+            offset_z = randint(-3, 3)
+
+            hx = start_x + gx * spacing + offset_x
+            hz = start_z + gz * spacing + offset_z
+
+            hx = max(
+                config.MAP_MARGIN,
+                min(
+                    hx,
+                    config.WORLD_SIZE - config.MAP_MARGIN
+                )
             )
-        )
 
-        hz = max(
-            config.MAP_MARGIN,
-            min(
-                village["z"] + randint(-15, 15),
-                config.WORLD_SIZE - config.MAP_MARGIN
+            hz = max(
+                config.MAP_MARGIN,
+                min(
+                    hz,
+                    config.WORLD_SIZE - config.MAP_MARGIN
+                )
             )
-        )
 
-        house = create_house(
-            hx,
-            hz,
-            village["biome"],
-            village["resource"]
-        )
+            house = create_house(
+                hx,
+                hz,
+                village["biome"],
+                village["resource"]
+            )
 
-        houses.append(house)
+            houses.append(house)
+
+            count += 1
 
     return houses
 
@@ -89,11 +111,19 @@ def build_house(editor, world_slice, house):
         house["resource"]
     )
 
-    width = 5
-    depth = 6
-    height = 5
+    # tailles aléatoires
+    width = randint(4, 6)
+    depth = randint(4, 6)
+    height = randint(3, 4)
 
-    # structure extérieure
+    orientation = choice([
+        "north",
+        "south",
+        "east",
+        "west"
+    ])
+
+    # structure principale
     placeCuboidHollow(
         editor,
         (x, y, z),
@@ -101,7 +131,7 @@ def build_house(editor, world_slice, house):
         wall_block
     )
 
-    # intérieur vide
+    # intérieur
     placeCuboid(
         editor,
         (x + 1, y + 1, z + 1),
@@ -109,42 +139,117 @@ def build_house(editor, world_slice, house):
         Block("air")
     )
 
-    # porte
-    editor.placeBlock(
-        (x + 2, y + 1, z),
-        Block("oak_door")
-    )
+    roof_block = Block("oak_stairs")
 
-    # toit gauche
-    for dz in range(-1, depth + 2):
+    # toit orientation nord/sud
+    if orientation in ["north", "south"]:
+
+        for dz in range(depth + 1):
+
+            editor.placeBlock(
+                (x - 1, y + height + 1, z + dz),
+                Block(
+                    "oak_stairs",
+                    {
+                        "facing": "east"
+                    }
+                )
+            )
+
+            editor.placeBlock(
+                (x + width + 1, y + height + 1, z + dz),
+                Block(
+                    "oak_stairs",
+                    {
+                        "facing": "west"
+                    }
+                )
+            )
+
+        placeCuboid(
+            editor,
+            (x, y + height + 1, z),
+            (x + width, y + height + 1, z + depth),
+            Block("oak_planks")
+        )
+
+    # toit orientation est/ouest
+    else:
+
+        for dx in range(width + 1):
+
+            editor.placeBlock(
+                (x + dx, y + height + 1, z - 1),
+                Block(
+                    "oak_stairs",
+                    {
+                        "facing": "south"
+                    }
+                )
+            )
+
+            editor.placeBlock(
+                (x + dx, y + height + 1, z + depth + 1),
+                Block(
+                    "oak_stairs",
+                    {
+                        "facing": "north"
+                    }
+                )
+            )
+
+        placeCuboid(
+            editor,
+            (x, y + height + 1, z),
+            (x + width, y + height + 1, z + depth),
+            Block("oak_planks")
+        )
+
+    # porte selon orientation
+    if orientation == "north":
 
         editor.placeBlock(
-            (x - 1, y + height + 1, z + dz),
+            (x + width // 2, y + 1, z),
             Block(
-                "oak_stairs",
+                "oak_door",
+                {
+                    "facing": "north"
+                }
+            )
+        )
+
+    elif orientation == "south":
+
+        editor.placeBlock(
+            (x + width // 2, y + 1, z + depth),
+            Block(
+                "oak_door",
+                {
+                    "facing": "south"
+                }
+            )
+        )
+
+    elif orientation == "east":
+
+        editor.placeBlock(
+            (x + width, y + 1, z + depth // 2),
+            Block(
+                "oak_door",
                 {
                     "facing": "east"
                 }
             )
         )
 
-    # toit droite
-    for dz in range(-1, depth + 2):
+    else:
 
         editor.placeBlock(
-            (x + width + 1, y + height + 1, z + dz),
+            (x, y + 1, z + depth // 2),
             Block(
-                "oak_stairs",
+                "oak_door",
                 {
                     "facing": "west"
                 }
             )
         )
-
-    # centre du toit
-    placeCuboid(
-        editor,
-        (x, y + height + 1, z - 1),
-        (x + width, y + height + 1, z + depth + 1),
-        Block("oak_planks")
-    )
