@@ -9,6 +9,8 @@ from gdpc.geometry import placeCuboidHollow
 
 from builder import get_height
 
+import math
+
 
 def create_house(x, z, biome, resource):
 
@@ -25,54 +27,77 @@ def generate_houses(village, amount):
 
     houses = []
 
-    spacing = 22
+    center_x = village["x"]
+    center_z = village["z"]
 
-    grid_size = int(amount ** 0.5) + 1
+    min_radius = 15
+    max_radius = 45
 
-    start_x = village["x"]
-    start_z = village["z"]
+    attempts = 0
 
-    count = 0
+    while len(houses) < amount and attempts < 500:
 
-    for gx in range(grid_size):
+        attempts += 1
 
-        for gz in range(grid_size):
+        angle = randint(0, 360)
 
-            if count >= amount:
-                return houses
+        radius = randint(
+            min_radius,
+            max_radius
+        )
 
-            offset_x = randint(-5, 5)
-            offset_z = randint(-5, 5)
+        hx = int(
+            center_x +
+            math.cos(math.radians(angle)) * radius
+        )
 
-            hx = start_x + gx * spacing + offset_x
-            hz = start_z + gz * spacing + offset_z
+        hz = int(
+            center_z +
+            math.sin(math.radians(angle)) * radius
+        )
 
-            hx = max(
-                config.MAP_MARGIN,
-                min(
-                    hx,
-                    config.WORLD_SIZE - config.MAP_MARGIN
-                )
-            )
-
-            hz = max(
-                config.MAP_MARGIN,
-                min(
-                    hz,
-                    config.WORLD_SIZE - config.MAP_MARGIN
-                )
-            )
-
-            house = create_house(
+        hx = max(
+            config.MAP_MARGIN,
+            min(
                 hx,
-                hz,
-                village["biome"],
-                village["resource"]
+                config.WORLD_SIZE - config.MAP_MARGIN
             )
+        )
 
-            houses.append(house)
+        hz = max(
+            config.MAP_MARGIN,
+            min(
+                hz,
+                config.WORLD_SIZE - config.MAP_MARGIN
+            )
+        )
 
-            count += 1
+        # évite les maisons trop proches
+        too_close = False
+
+        for house in houses:
+
+            distance = (
+                (hx - house["x"]) ** 2 +
+                (hz - house["z"]) ** 2
+            ) ** 0.5
+
+            if distance < 14:
+
+                too_close = True
+                break
+
+        if too_close:
+            continue
+
+        house = create_house(
+            hx,
+            hz,
+            village["biome"],
+            village["resource"]
+        )
+
+        houses.append(house)
 
     return houses
 
