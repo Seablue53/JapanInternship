@@ -107,22 +107,66 @@ def get_wall_material(resource):
     if resource == "wood":
 
         return choice([
+            Block("spruce_planks"),
             Block("oak_planks"),
-            Block("spruce_planks")
+            Block("birch_planks")
         ])
 
     elif resource == "stone":
 
         return choice([
             Block("stone_bricks"),
-            Block("cobblestone")
+            Block("cobblestone"),
+            Block("andesite")
         ])
 
     elif resource == "sand":
 
-        return Block("sandstone")
+        return choice([
+            Block("sandstone"),
+            Block("smooth_sandstone")
+        ])
+
+    elif resource == "food":
+
+        return choice([
+            Block("oak_planks"),
+            Block("mud_bricks")
+        ])
 
     return Block("oak_planks")
+
+def get_roof_material(resource):
+
+    if resource == "wood":
+
+        return choice([
+            "spruce_stairs",
+            "roof_material",
+            "dark_roof_material"
+        ])
+
+    elif resource == "stone":
+
+        return choice([
+            "stone_brick_stairs",
+            "cobblestone_stairs"
+        ])
+
+    elif resource == "sand":
+
+        return choice([
+            "sandstone_stairs"
+        ])
+
+    elif resource == "food":
+
+        return choice([
+            "roof_material",
+            "spruce_stairs"
+        ])
+
+    return "roof_material"
 
 
 def build_house(editor, world_slice, house):
@@ -164,7 +208,9 @@ def build_house(editor, world_slice, house):
         Block("air")
     )
 
-    roof_block = Block("oak_stairs")
+    roof_material = get_roof_material(
+    house["resource"]
+)
 
     # toit orientation nord/sud
     if orientation in ["north", "south"]:
@@ -174,7 +220,7 @@ def build_house(editor, world_slice, house):
             editor.placeBlock(
                 (x - 1, y + height + 1, z + dz),
                 Block(
-                    "oak_stairs",
+                    "roof_material",
                     {
                         "facing": "east"
                     }
@@ -184,7 +230,7 @@ def build_house(editor, world_slice, house):
             editor.placeBlock(
                 (x + width + 1, y + height + 1, z + dz),
                 Block(
-                    "oak_stairs",
+                    roof_material,
                     {
                         "facing": "west"
                     }
@@ -206,7 +252,7 @@ def build_house(editor, world_slice, house):
             editor.placeBlock(
                 (x + dx, y + height + 1, z - 1),
                 Block(
-                    "oak_stairs",
+                    "roof_material",
                     {
                         "facing": "south"
                     }
@@ -216,7 +262,7 @@ def build_house(editor, world_slice, house):
             editor.placeBlock(
                 (x + dx, y + height + 1, z + depth + 1),
                 Block(
-                    "oak_stairs",
+                    "roof_material",
                     {
                         "facing": "north"
                     }
