@@ -66,13 +66,14 @@ def build_house(editor, world_slice, house):
     )
 
     # ── Poutres d'angle (logs verticaux) ──────────────────────────────────────
+    # range(1, height) : on s'arrête à height - 1 pour ne pas déborder dans le toit
     for cx, cz in [
         (x,          z),
         (x + width,  z),
         (x,          z + depth),
         (x + width,  z + depth),
     ]:
-        for dy in range(1, height + 1):
+        for dy in range(1, height):
             editor.placeBlock((cx, y + dy, cz), log_block)
 
     # ── Fenêtres ──────────────────────────────────────────────────────────────

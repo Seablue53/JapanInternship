@@ -1,129 +1,60 @@
 from gdpc import Block
 
+def _place_roof_ns(editor, x, base_y, z, width, depth, stair_name, slab_name, log_name):
+    """Toit nord/sud : pignon sur X, faîtage parallèle à Z."""
+    half = width // 2
+
+    for layer in range(half + 1):
+        lx = x + layer
+        rx = x + width - layer
+        ry = base_y + layer
+
+        # Logs du pignon
+        for pz in (z, z + depth):
+            if lx <= rx:
+                editor.placeBlock((lx, ry, pz), Block(log_name))
+                if lx < rx:
+                    editor.placeBlock((rx, ry, pz), Block(log_name))
+
+        # Remplissage du toit
+        for dz in range(depth + 1):
+            curr_z = z + dz
+            if lx < rx:
+                # Escaliers qui se rejoignent pour largeur paire
+                editor.placeBlock((lx, ry, curr_z), Block(stair_name, {"facing": "east"}))
+                editor.placeBlock((rx, ry, curr_z), Block(stair_name, {"facing": "west"}))
+            elif lx == rx:
+                # LARGEUR IMPAIRE : On met un bloc plein au lieu d'une slab
+                # On utilise log_name ou n'importe quel bloc plein (ex: 'spruce_planks')
+                editor.placeBlock((lx, ry, curr_z), Block(log_name))
+
+def _place_roof_ew(editor, x, base_y, z, width, depth, stair_name, slab_name, log_name):
+    """Toit est/ouest : pignon sur Z, faîtage parallèle à X."""
+    half = depth // 2
+
+    for layer in range(half + 1):
+        fz = z + layer
+        bz = z + depth - layer
+        ry = base_y + layer
+
+        for px in (x, x + width):
+            if fz <= bz:
+                editor.placeBlock((px, ry, fz), Block(log_name))
+                if fz < bz:
+                    editor.placeBlock((px, ry, bz), Block(log_name))
+
+        for dx in range(width + 1):
+            curr_x = x + dx
+            if fz < bz:
+                editor.placeBlock((curr_x, ry, fz), Block(stair_name, {"facing": "south"}))
+                editor.placeBlock((curr_x, ry, bz), Block(stair_name, {"facing": "north"}))
+            elif fz == bz:
+                # PROFONDEUR IMPAIRE : Bloc plein au sommet
+                editor.placeBlock((curr_x, ry, fz), Block(log_name))
 
 def build_roof(editor, x, base_y, z, width, depth, orientation,
                stair_name, slab_name, log_name):
-    """
-    Toit en pignon (gable roof) façon vanilla.
-
-    Gère correctement les largeurs/profondeurs paires ET impaires.
-
-    Paire  (ex: width=6) → lx == rx à un moment → une slab au faîte
-    Impaire (ex: width=7) → lx et rx se croisent sans jamais être égaux
-                          → deux slabs adjacentes au faîte
-    """
-
     if orientation in ("north", "south"):
-
-        layers = (width // 2) + 1
-
-        for layer in range(layers):
-
-            lx = x + layer
-            rx = x + width - layer
-            ry = base_y + layer
-
-            # Les deux côtés se sont croisés : cas impair déjà traité après
-            if lx > rx:
-                break
-
-            for pz in (z, z + depth):
-                if lx < rx:
-                    editor.placeBlock((lx, ry, pz), Block(log_name))
-                    editor.placeBlock((rx, ry, pz), Block(log_name))
-                else:
-                    editor.placeBlock((lx, ry, pz), Block(log_name))
-
-            for dz in range(depth + 1):
-                if lx < rx:
-                    editor.placeBlock(
-                        (lx, ry, z + dz),
-                        Block(stair_name, {"facing": "east"})
-                    )
-                    editor.placeBlock(
-                        (rx, ry, z + dz),
-                        Block(stair_name, {"facing": "west"})
-                    )
-                else:
-                    editor.placeBlock(
-                        (lx, ry, z + dz),
-                        Block(slab_name, {"type": "top"})
-                    )
-
-        # Largeur impaire : faîte double (deux slabs côte à côte)
-        if width % 2 == 1:
-            faite_layer = width // 2
-            lx = x + faite_layer
-            rx = lx + 1
-            ry = base_y + faite_layer
-
-            for pz in (z, z + depth):
-                editor.placeBlock((lx, ry, pz), Block(log_name))
-                editor.placeBlock((rx, ry, pz), Block(log_name))
-
-            for dz in range(depth + 1):
-                editor.placeBlock(
-                    (lx, ry, z + dz),
-                    Block(slab_name, {"type": "top"})
-                )
-                editor.placeBlock(
-                    (rx, ry, z + dz),
-                    Block(slab_name, {"type": "top"})
-                )
-
+        _place_roof_ns(editor, x, base_y, z, width, depth, stair_name, slab_name, log_name)
     else:
-
-        layers = (depth // 2) + 1
-
-        for layer in range(layers):
-
-            fz = z + layer
-            bz = z + depth - layer
-            ry = base_y + layer
-
-            if fz > bz:
-                break
-
-            for px in (x, x + width):
-                if fz < bz:
-                    editor.placeBlock((px, ry, fz), Block(log_name))
-                    editor.placeBlock((px, ry, bz), Block(log_name))
-                else:
-                    editor.placeBlock((px, ry, fz), Block(log_name))
-
-            for dx in range(width + 1):
-                if fz < bz:
-                    editor.placeBlock(
-                        (x + dx, ry, fz),
-                        Block(stair_name, {"facing": "south"})
-                    )
-                    editor.placeBlock(
-                        (x + dx, ry, bz),
-                        Block(stair_name, {"facing": "north"})
-                    )
-                else:
-                    editor.placeBlock(
-                        (x + dx, ry, fz),
-                        Block(slab_name, {"type": "top"})
-                    )
-
-        # Profondeur impaire : faîte double
-        if depth % 2 == 1:
-            faite_layer = depth // 2
-            fz = z + faite_layer
-            bz = fz + 1
-            ry = base_y + faite_layer
-
-            for px in (x, x + width):
-                editor.placeBlock((px, ry, fz), Block(log_name))
-                editor.placeBlock((px, ry, bz), Block(log_name))
-
-            for dx in range(width + 1):
-                editor.placeBlock(
-                    (x + dx, ry, fz),
-                    Block(slab_name, {"type": "top"})
-                )
-                editor.placeBlock(
-                    (x + dx, ry, bz),
-                    Block(slab_name, {"type": "top"})
-                )
+        _place_roof_ew(editor, x, base_y, z, width, depth, stair_name, slab_name, log_name)
