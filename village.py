@@ -1,3 +1,5 @@
+from random import randint
+
 from houses import generate_houses
 from houses import build_house
 
@@ -5,28 +7,66 @@ from agents import generate_agents
 from agents import build_agent
 
 
-RESOURCE_VILLAGE_SIZE = {
-    "wood": 8,
-    "food": 6,
-    "stone": 4,
-    "sand": 3,
-    "basic": 2
-}
+def get_village_size(resource):
+
+    if resource == "wood":
+        return randint(12, 18)
+
+    elif resource == "food":
+        return randint(10, 16)
+
+    elif resource == "stone":
+        return randint(8, 14)
+
+    elif resource == "sand":
+        return randint(6, 10)
+
+    return randint(5, 8)
 
 
 def create_villages(zones):
 
     villages = []
 
+    village_spacing = 100
+
+    occupied_positions = []
+
     for zone in zones:
 
-        size = RESOURCE_VILLAGE_SIZE[
+        # seulement quelques villages
+        if randint(0, 100) > 8:
+            continue
+
+        zx = zone["x"]
+        zz = zone["z"]
+
+        too_close = False
+
+        for ox, oz in occupied_positions:
+
+            distance = (
+                (zx - ox) ** 2 +
+                (zz - oz) ** 2
+            ) ** 0.5
+
+            if distance < village_spacing:
+
+                too_close = True
+                break
+
+        if too_close:
+            continue
+
+        occupied_positions.append((zx, zz))
+
+        size = get_village_size(
             zone["resource"]
-        ]
+        )
 
         village = {
-            "x": zone["x"],
-            "z": zone["z"],
+            "x": zx,
+            "z": zz,
             "biome": zone["biome"],
             "resource": zone["resource"],
             "houses": [],

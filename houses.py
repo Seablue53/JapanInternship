@@ -25,7 +25,7 @@ def generate_houses(village, amount):
 
     houses = []
 
-    spacing = 18
+    spacing = 22
 
     grid_size = int(amount ** 0.5) + 1
 
@@ -41,8 +41,8 @@ def generate_houses(village, amount):
             if count >= amount:
                 return houses
 
-            offset_x = randint(-3, 3)
-            offset_z = randint(-3, 3)
+            offset_x = randint(-5, 5)
+            offset_z = randint(-5, 5)
 
             hx = start_x + gx * spacing + offset_x
             hz = start_z + gz * spacing + offset_z
