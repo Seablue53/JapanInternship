@@ -1,18 +1,37 @@
 from gdpc import Editor
+
+from grid import build_grid
+from village import create_villages
+from builder import build_village
+
 import config
-from map import build_grid
-from agent import create_agents
-from simulation import step_simulation
+
 
 def main():
+
     editor = Editor(buffering=True)
 
-    grid = build_grid(editor, config.WORLD_SIZE, config.GRID_SIZE)
-    agents = create_agents(config.NUM_AGENTS, config.WORLD_SIZE)
+    world_slice = editor.loadWorldSlice()
 
-    for step in range(config.STEPS):
-        agents = step_simulation(agents, grid, config)
-        print(f"Step {step}, agents restants: {len(agents)}")
+    zones = build_grid(
+        editor,
+        config.WORLD_SIZE,
+        config.GRID_SIZE
+    )
+
+    villages = create_villages(zones)
+
+    for village in villages:
+
+        build_village(editor, world_slice, village)
+
+    editor.flushBuffer()
+
+    for village in villages:
+
+        print("Village")
+        print(village)
+
 
 if __name__ == "__main__":
     main()
