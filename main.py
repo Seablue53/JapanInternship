@@ -1,8 +1,9 @@
 from gdpc import Editor
 
 from grid import build_grid
+
 from village import create_villages
-from builder import build_village
+from village import build_village
 
 import config
 
@@ -23,13 +24,16 @@ def main():
 
     for village in villages:
 
-        build_village(editor, world_slice, village)
+        build_village(
+            editor,
+            world_slice,
+            village
+        )
 
     editor.flushBuffer()
 
     for village in villages:
 
-        print("Village")
         print(village)
 
 

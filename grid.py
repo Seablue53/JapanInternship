@@ -1,4 +1,4 @@
-from gdpc import Editor
+
 
 BIOME_RESOURCES = {
     "forest": "wood",
@@ -24,6 +24,7 @@ def build_grid(editor, world_size, grid_size):
     zones = []
 
     for x in range(0, world_size, grid_size):
+
         for z in range(0, world_size, grid_size):
 
             biome = editor.getBiome((x, 0, z))

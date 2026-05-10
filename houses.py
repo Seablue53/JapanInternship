@@ -1,4 +1,7 @@
-from random import randint, choice
+import config
+
+from random import randint
+from random import choice
 
 from gdpc import Block
 from gdpc.geometry import placeCuboid
@@ -24,8 +27,21 @@ def generate_houses(village, amount):
 
     for _ in range(amount):
 
-        hx = village["x"] + randint(-15, 15)
-        hz = village["z"] + randint(-15, 15)
+        hx = max(
+            config.MAP_MARGIN,
+            min(
+                village["x"] + randint(-15, 15),
+                config.WORLD_SIZE - config.MAP_MARGIN
+            )
+        )
+
+        hz = max(
+            config.MAP_MARGIN,
+            min(
+                village["z"] + randint(-15, 15),
+                config.WORLD_SIZE - config.MAP_MARGIN
+            )
+        )
 
         house = create_house(
             hx,
@@ -77,6 +93,7 @@ def build_house(editor, world_slice, house):
     depth = 6
     height = 5
 
+    # structure extérieure
     placeCuboidHollow(
         editor,
         (x, y, z),
@@ -84,6 +101,7 @@ def build_house(editor, world_slice, house):
         wall_block
     )
 
+    # intérieur vide
     placeCuboid(
         editor,
         (x + 1, y + 1, z + 1),
@@ -91,7 +109,42 @@ def build_house(editor, world_slice, house):
         Block("air")
     )
 
+    # porte
     editor.placeBlock(
         (x + 2, y + 1, z),
         Block("oak_door")
+    )
+
+    # toit gauche
+    for dz in range(-1, depth + 2):
+
+        editor.placeBlock(
+            (x - 1, y + height + 1, z + dz),
+            Block(
+                "oak_stairs",
+                {
+                    "facing": "east"
+                }
+            )
+        )
+
+    # toit droite
+    for dz in range(-1, depth + 2):
+
+        editor.placeBlock(
+            (x + width + 1, y + height + 1, z + dz),
+            Block(
+                "oak_stairs",
+                {
+                    "facing": "west"
+                }
+            )
+        )
+
+    # centre du toit
+    placeCuboid(
+        editor,
+        (x, y + height + 1, z - 1),
+        (x + width, y + height + 1, z + depth + 1),
+        Block("oak_planks")
     )
