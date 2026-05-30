@@ -11,12 +11,46 @@ from villages.houses.roof import build_roof
 from villages.houses.door import place_door
 
 
+def _ground_level(world_slice, x, z, width, depth):
+    """
+    Retourne le Y max sous toute la surface de la maison.
+    Garantit que la fondation est toujours au-dessus du terrain.
+    """
+
+    y_max = 0
+
+    for dx in range(width + 1):
+        for dz in range(depth + 1):
+            y = get_height(world_slice, x + dx, z + dz)
+            if y > y_max:
+                y_max = y
+
+    return y_max
+
+
+def _fill_foundation(editor, world_slice, x, z, width, depth, y_base, fill_block):
+    """
+    Pour chaque colonne sous la maison, remplit depuis le sol réel
+    jusqu'à y_base pour combler les creux du terrain.
+    """
+
+    for dx in range(width + 1):
+        for dz in range(depth + 1):
+            y_col = get_height(world_slice, x + dx, z + dz) - 1
+
+            if y_col < y_base:
+                placeCuboid(
+                    editor,
+                    (x + dx, y_col + 1, z + dz),
+                    (x + dx, y_base,    z + dz),
+                    fill_block
+                )
+
+
 def build_house(editor, world_slice, house):
 
     x = house["x"]
     z = house["z"]
-
-    y = get_height(world_slice, x, z) - 1
 
     mat = get_materials(house["resource"])
 
@@ -41,7 +75,16 @@ def build_house(editor, world_slice, house):
 
     orientation = choice(["north", "south", "east", "west"])
 
-    # ── Fondation ─────────────────────────────────────────────────────────────
+
+    y = _ground_level(world_slice, x, z, width, depth) - 1
+
+    _fill_foundation(
+        editor, world_slice,
+        x, z, width, depth,
+        y, wall_block
+    )
+
+
     placeCuboid(
         editor,
         (x,         y,     z),
@@ -49,7 +92,7 @@ def build_house(editor, world_slice, house):
         floor_block
     )
 
-    # ── Murs creux ────────────────────────────────────────────────────────────
+
     placeCuboidHollow(
         editor,
         (x,         y + 1,      z),
@@ -57,7 +100,7 @@ def build_house(editor, world_slice, house):
         wall_block
     )
 
-    # ── Vider l'intérieur ─────────────────────────────────────────────────────
+
     placeCuboid(
         editor,
         (x + 1,         y + 1,          z + 1),
@@ -65,8 +108,7 @@ def build_house(editor, world_slice, house):
         air_block
     )
 
-    # ── Poutres d'angle (logs verticaux) ──────────────────────────────────────
-    # range(1, height) : on s'arrête à height - 1 pour ne pas déborder dans le toit
+
     for cx, cz in [
         (x,          z),
         (x + width,  z),
@@ -76,7 +118,7 @@ def build_house(editor, world_slice, house):
         for dy in range(1, height):
             editor.placeBlock((cx, y + dy, cz), log_block)
 
-    # ── Fenêtres ──────────────────────────────────────────────────────────────
+
     win_y = y + 2
     mid_x = x + width // 2
     mid_z = z + depth // 2
@@ -91,7 +133,7 @@ def build_house(editor, world_slice, house):
             editor.placeBlock((x,         win_y, win_z), glass_block)
             editor.placeBlock((x + width, win_y, win_z), glass_block)
 
-    # ── Toit ──────────────────────────────────────────────────────────────────
+
     build_roof(
         editor,
         x, y + height, z,
@@ -101,7 +143,7 @@ def build_house(editor, world_slice, house):
         log_name
     )
 
-    # ── Porte ─────────────────────────────────────────────────────────────────
+
     place_door(
         editor,
         x, y, z,
@@ -110,7 +152,6 @@ def build_house(editor, world_slice, house):
         door_name
     )
 
-    # ── Lumière intérieure ────────────────────────────────────────────────────
     editor.placeBlock(
         (x + width // 2, y + height - 1, z + depth // 2),
         Block(light_name)

@@ -1,14 +1,12 @@
 from random import random
 
 
-# ── Probabilités de base ──────────────────────────────────────────────────────
 
 P_MIGRATE = 0.20
 P_IMPROVE = 0.25
 # P_IDLE  = 0.55
 
 
-# ── Décision principale ───────────────────────────────────────────────────────
 
 def decide(agent, all_villages):
     """
@@ -38,7 +36,6 @@ def decide(agent, all_villages):
     return {"type": "idle", "target": None}
 
 
-# ── Ajustements ───────────────────────────────────────────────────────────────
 
 def _adjusted_migrate(agent, all_villages):
 
@@ -78,7 +75,6 @@ def _adjusted_improve(agent):
     return max(0.0, min(1.0, p))
 
 
-# ── Sélection de la destination ───────────────────────────────────────────────
 
 def _pick_target(agent, all_villages):
 
