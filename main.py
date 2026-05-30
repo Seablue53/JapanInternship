@@ -1,8 +1,8 @@
 from gdpc import Editor
 
 from grid import build_grid
-from village import create_villages
-from builder import build_village
+from villages.village import create_villages
+from simulation import run
 
 import config
 
@@ -21,16 +21,13 @@ def main():
 
     villages = create_villages(zones)
 
-    for village in villages:
-
-        build_village(editor, world_slice, village)
-
-    editor.flushBuffer()
-
-    for village in villages:
-
-        print("Village")
-        print(village)
+    run(
+        villages    = villages,
+        editor      = editor,
+        world_slice = world_slice,
+        ticks       = config.SIMULATION_TICKS,
+        tick_delay  = config.TICK_DELAY,
+    )
 
 
 if __name__ == "__main__":

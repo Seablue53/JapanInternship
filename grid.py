@@ -3,7 +3,7 @@
 BIOME_RESOURCES = {
     "forest": "wood",
     "plains": "food",
-    "desert": "sand",
+    "desert": "stone",
     "mountain": "stone",
     "jungle": "wood"
 }

@@ -1,6 +1,5 @@
 from random import choice
 
-
 MATERIALS = {
     "wood": {
         "wall":   ["spruce_planks", "oak_planks", "birch_planks"],
@@ -23,17 +22,6 @@ MATERIALS = {
         "door":   "iron_door",
         "light":  "sea_lantern",
         "fence":  "iron_bars",
-    },
-    "sand": {
-        "wall":   ["sandstone", "smooth_sandstone", "cut_sandstone"],
-        "log":    ["smooth_sandstone", "cut_sandstone"],
-        "slab":   ["sandstone_slab", "smooth_sandstone_slab"],
-        "stairs": ["sandstone_stairs", "smooth_sandstone_stairs"],
-        "glass":  "glass_pane",
-        "floor":  "sand",
-        "door":   "acacia_door",
-        "light":  "torch",
-        "fence":  "acacia_fence",
     },
     "food": {
         "wall":   ["oak_planks", "mud_bricks"],

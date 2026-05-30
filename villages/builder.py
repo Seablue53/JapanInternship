@@ -1,7 +1,7 @@
 from gdpc import Block
 from gdpc.geometry import placeCuboid
 
-from houses_data import generate_houses
+from villages.houses.houses_data import generate_houses
 
 
 def get_height(world_slice, x, z):
@@ -31,7 +31,7 @@ def clear_area(
 
 def build_village(editor, world_slice, village):
 
-    from houses import build_house
+    from villages.houses.houses import build_house
 
     amount = village.get("population", 5)
 

@@ -3,12 +3,12 @@ from random import randint, choice
 from gdpc import Block
 from gdpc.geometry import placeCuboid, placeCuboidHollow
 
-from builder import get_height
+from villages.builder import get_height
 
-from houses_data import create_house, generate_houses
-from materials import get_materials, pick
-from roof import build_roof
-from door import place_door
+from villages.houses.houses_data import create_house, generate_houses
+from villages.materials import get_materials, pick
+from villages.houses.roof import build_roof
+from villages.houses.door import place_door
 
 
 def build_house(editor, world_slice, house):
