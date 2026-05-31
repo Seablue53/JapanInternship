@@ -1,10 +1,8 @@
 from random import random
 
-
-
 P_MIGRATE = 0.20
 P_IMPROVE = 0.25
-# P_IDLE  = 0.55
+P_IDLE  = 0.55
 
 
 

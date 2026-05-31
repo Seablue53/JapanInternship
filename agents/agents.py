@@ -1,7 +1,7 @@
 from gdpc import Block
 
 from villages.builder import get_height
-from behaviour import decide
+from agents.behaviour import decide
 
 
 def create_agent(house, village, index):
@@ -13,6 +13,7 @@ def create_agent(house, village, index):
         "resource":         house["resource"],
         "inventory":        {house["resource"]: 1},
         "migrate_cooldown": 0,
+        "improved":         0,
         "history":          [],
     }
 
@@ -100,9 +101,6 @@ def _migrate(agent, target_village, editor, world_slice):
 
     agent["house"]   = new_house
     agent["village"] = target_village
-
-    build_agent(editor, world_slice, agent)
-
     agent["migrate_cooldown"] = 3
 
 
@@ -117,6 +115,8 @@ def _improve(agent, editor, world_slice):
         (x, y + 5, z),
         Block("lantern")
     )
+
+    agent["improved"] += 1
 
 
 def _idle(agent):
