@@ -1,22 +1,49 @@
 
 
 BIOME_RESOURCES = {
-    "forest": "wood",
-    "plains": "food",
-    "desert": "stone",
-    "mountain": "stone",
-    "jungle": "wood"
-}
 
+    # Wood
+    "forest": "wood",
+    "birch": "wood",
+    "dark_forest": "wood",
+    "taiga": "wood",
+    "old_growth": "wood",
+    "jungle": "wood",
+    "bamboo": "wood",
+    "mangrove": "wood",
+    "grove": "wood",
+    "swamp": "wood",
+
+    # Food
+    "plains": "food",
+    "savanna": "food",
+    "river": "food",
+    "ocean": "food",
+    "beach": "food",
+    "snowy_plains": "food",
+    "meadow": "food",
+
+    # Sand
+    "desert": "sand",
+
+    # Stone
+    "mountain": "stone",
+    "windswept": "stone",
+    "stony": "stone",
+    "peaks": "stone",
+    "badlands": "stone",
+    "lush_caves": "stone"
+}
 
 def detect_resource(biome):
 
     for key in BIOME_RESOURCES:
 
+        biome = biome.lower()
         if key in biome:
             return BIOME_RESOURCES[key]
 
-    return "basic"
+    return "food"
 
 
 def build_grid(editor, world_size, grid_size):
@@ -27,7 +54,7 @@ def build_grid(editor, world_size, grid_size):
 
         for z in range(0, world_size, grid_size):
 
-            biome = editor.getBiome((x, 0, z))
+            biome = editor.getBiome((x, 256, z))
 
             zones.append({
                 "x": x,

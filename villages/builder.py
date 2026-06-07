@@ -6,9 +6,17 @@ from villages.houses.houses_data import generate_houses
 
 def get_height(world_slice, x, z):
 
-    return world_slice.heightmaps[
+    heightmap = world_slice.heightmaps[
         "MOTION_BLOCKING_NO_LEAVES"
-    ][x, z]
+    ]
+
+    max_x = heightmap.shape[0] - 1
+    max_z = heightmap.shape[1] - 1
+
+    safe_x = max(0, min(x, max_x))
+    safe_z = max(0, min(z, max_z))
+
+    return heightmap[safe_x, safe_z]
 
 
 def clear_area(

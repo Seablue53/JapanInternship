@@ -3,8 +3,20 @@ from gdpc.geometry import placeCuboid
 
 
 def _plank_from_stair(stair_name):
-    return stair_name.replace("_stairs", "_planks")
 
+    mapping = {
+        "oak_stairs": "oak_planks",
+        "spruce_stairs": "spruce_planks",
+        "birch_stairs": "birch_planks",
+        "dark_oak_stairs": "dark_oak_planks",
+
+        "cobblestone_stairs": "cobblestone",
+        "stone_brick_stairs": "stone_bricks",
+        "sandstone_stairs": "sandstone",
+        "red_sandstone_stairs": "red_sandstone"
+    }
+
+    return mapping.get(stair_name, "oak_planks")
 
 def _place_roof_ns(editor, x, base_y, z, width, depth, stair_name, slab_name):
     """Pignon sur X, faîtage parallèle à Z. Déborde de 1 bloc sur les côtés."""
