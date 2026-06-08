@@ -67,8 +67,9 @@ def tick_agent(agent, all_villages, editor, world_slice):
 
 def _migrate(agent, target_village, editor, world_slice):
 
-    from villages.houses.houses import build_house
-    from villages.houses.houses_data import create_house
+    from gdpc.block import Block
+    from random import randint, choice
+    from villages.builder import get_height
 
     current = agent["village"]
 
@@ -87,15 +88,26 @@ def _migrate(agent, target_village, editor, world_slice):
         agent["inventory"].get(target_res, 0) + 1
     )
 
-    new_house = create_house(
-        target_village["x"] + 8,
-        target_village["z"] + 8,
-        target_village["biome"],
-        target_village["resource"],
-    )
-    new_house["owner"] = agent["name"]
+    test_x = target_village["x"] + 8
+    test_z = target_village["z"] + 8
 
-    build_house(editor, world_slice, new_house)
+    new_house = {
+        "x": test_x,
+        "z": test_z,
+        "biome": target_village["biome"],
+        "resource": target_village["resource"],
+        "owner": agent["name"],
+        "style": "marker",
+        "width": 1,
+        "length": 1,
+        "depth": 1
+    }
+
+    test_y = get_height(world_slice, test_x, test_z)
+    
+    editor.placeBlock((test_x, test_y, test_z), Block("emerald_block"))
+    editor.placeBlock((test_x, test_y + 1, test_z), Block("red_banner"))
+
     target_village["houses"].append(new_house)
     target_village["agents"].append(agent)
 
@@ -105,18 +117,25 @@ def _migrate(agent, target_village, editor, world_slice):
 
 
 def _improve(agent, editor, world_slice):
+    if agent.get("house") and agent["house"].get("style") == "marker":
+        return
 
-    x = agent["house"]["x"] + 2
-    z = agent["house"]["z"] + 2
+    from villages.houses.houses import improve_house
 
-    y = get_height(world_slice, x, z)
+    house = agent["house"]
 
-    editor.placeBlock(
-        (x, y + 5, z),
-        Block("lantern")
+    improvement = improve_house(
+        editor,
+        house
     )
 
-    agent["improved"] += 1
+    if improvement is not None:
+
+        agent["improved"] += 1
+
+        print(
+            f"{agent['name']} added {improvement}"
+        )
 
 
 def _idle(agent):
